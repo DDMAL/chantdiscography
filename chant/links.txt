@@ -1,0 +1,36 @@
+ <strong>Links:</strong>
+    <p> <a href="http://www.omifacsimiles.com">A US dealer in chant facsimiles</a></br>
+http://www.omifacsimiles.com</p>
+	<p><a href="http://www.erwin-rauner.de">Electronic cataloging of Latin manuscripts</a></br>
+http://www.erwin-rauner.de</p>
+	<p><a href="http://www.globalchant.org">Database of chant melodies and texts</a></br>
+http://www.globalchant.org</p>
+	<p><a href="http://cantus.uwaterloo.ca">Indices of liturgical Office chants</a></br>
+http://cantus.uwaterloo.ca</p>
+	<p><a href="http://www.medieval.org/emfaq">Recordings of medieval music</a></br>
+http://www.medieval.org/emfaq</p>
+	<p><a href="http://www.liturgica.com">Recordings of Eastern and Western chant</a></br>
+http://www.liturgica.com</p>
+	<p><a href="http://www.cantusplanus.org">IMS study group for chant</a></br>
+href="http://www.cantusplanus.org</p>
+	<p><a href="http://www.aiscgre.de">Research toward a critical edition of chant</a></br>
+http://www.aiscgre.de</p>
+	<p><a href="http://www.musicasacra.com">Church Music Association of America</a></br>
+http://www.musicasacra.com</p>
+	<p><a href="http://www.nd.edu/~medinst">Medieval Institute of U. of Notre Dame</a></br>
+http://www.nd.edu/~medinst</p>
+	<p><a href="http://www.gregorien.info">A repertory of Gregorian chants</a></br>
+http://www.gregorien.info</p>
+	<p><a href="http://www.plainsong.org.uk">Plainsong and Medieval Music Society</a></br>
+http://www.plainsong.org.uk</p>
+	<p><a href="http://www.arsc-audio.org">Record archivists and discographers</a></br>
+http://www.arsc-audio.org</p>
+<p><a href="http://www.saint-gregory.org/recordings-publications">Society of St. Gregory, New Haven, Conn.</a></br>
+http://www.saint-gregory.org/recordings-publications</p>
+<p><a href="http://www.gregorian.ca">Gregorian Institute of Canada</a></br>
+http://www.gregorian.ca</p>
+<p><a href="http://www.uni-regensburg.de/Fakultaeten/phil_Fak_I/Musikwissenschaft/cantus/index.htm">Data pool for chant research</a></br>
+http://www.uni-regensburg.de/Fakultaeten/phil_Fak_I/Musikwissenschaft/cantus/index.htm</p>
+<p>To order Richard Crocker CDs:</br>
+rgcrocker AT comcast DOT net</br>
+(restore normal reading of e-mail address)</p>

@@ -1,0 +1,19 @@
+#loading
+{
+width: 100%;
+position: absolute;
+}
+li
+{
+list-style: none;
+float: left;
+margin-right: 16px;
+padding:5px;
+border:solid 1px #dddddd;
+color:#0063DC;
+}
+li:hover
+{
+color:#FF0084;
+cursor: pointer;
+}

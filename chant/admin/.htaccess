@@ -1,0 +1,14 @@
+order deny,allow
+deny from all
+#FTL IP
+allow from 24.103.218
+#JW Verizon IPs
+#allow from 104.229.126.125
+#allow from 104.229.126
+allow from 104.229
+allow from 67.241.245
+allow from 24.198
+allow from 67.240.227
+allow from 69.207.97
+
+

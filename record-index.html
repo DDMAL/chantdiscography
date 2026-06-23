@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" type="text/css" media="all" href="css/style.css" />
+  <title>Record Index — Chant Discography</title>
+</head>
+<body>
+
+<div style="width:800px;margin:0 auto;text-align:right;font-size:12pt">
+  <a href="index.html#contact" style="color:#666;text-decoration:none;">Contact Us</a><br />
+  <a href="index.html#links" style="color:#666;text-decoration:none;">Links</a>
+</div>
+
+<div id="header">
+  <div style="position:absolute;margin-top:75px;margin-left:220px;">
+    <form id="searchForm">
+      <input id="searchInput" name="searchtxt" type="text" class="searchfield" maxlength="150" />
+      <input type="submit" value="SEARCH" />
+    </form>
+    <span style="margin-left:115px">
+      <a href="chant-index.html">Chants</a> |
+      <a href="record-index.html">Records</a> |
+      <a href="performer-index.html">Performers</a>
+    </span>
+  </div>
+</div>
+
+<ul class="sitenav clearfix">
+  <li><a href="index.html#home">Home</a></li>
+  <li><a href="index.html#search-help">Searching</a></li>
+  <li><a href="index.html#abbreviations">Abbreviations</a></li>
+  <li><a href="index.html#tropes">Other Articles</a></li>
+  <li><a href="index.html#background">Background</a></li>
+  <li><a href="index.html#print">Print edition</a></li>
+  <li><a href="index.html#liber">Liber Usualis</a></li>
+  <li><a href="index.html#records-needed">Records Needed</a></li>
+</ul>
+
+<div id="results">
+  <div id="loading">Loading record index…</div>
+</div>
+
+<div id="footer" style="text-align:center">
+  <strong>Support has come from the following sources:</strong>
+  <p>The Central Library Resources Council</p>
+  <p>The Dom Mocquereau Fund</p>
+  <p><img src="img/pmms_logo.jpg" width="50" height="40" style="vertical-align:middle" /><br />
+  The Plainsong and Medieval Music Society</p>
+  <p>The Association for Recorded Sound Collections</p>
+</div>
+<div id="footer" style="text-align:center">
+  <a href="index.html#home">Home</a> |
+  <a href="index.html#search-help">Searching</a> |
+  <a href="index.html#abbreviations">Abbreviations</a> |
+  <a href="index.html#tropes">Tropes</a> |
+  <a href="index.html#background">Background</a> |
+  <a href="index.html#print">Print edition</a> |
+  <a href="index.html#liber">Liber Usualis</a> |
+  <a href="index.html#records-needed">Records Needed</a> |
+  <a href="index.html#contact">Contact Us</a> |
+  <a href="index.html#links">Links</a>
+  <p>&copy;2010</p>
+</div>
+
+<script>
+async function init() {
+  const r = await fetch('data/records.json');
+  const records = await r.json();
+  records.sort((a,b) => (a.record_title||'').localeCompare(b.record_title||''));
+
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  let lnav = '<div class="letter-nav">Jump: ';
+  lnav += letters.map(l =>
+    `<a href="#letter-${l}">${l}</a>`
+  ).join(' ');
+  lnav += '</div>';
+
+  let html = `<h3>Records (${records.length.toLocaleString()}):</h3>` + lnav;
+
+  let lastLetter = '';
+  records.forEach(rec => {
+    const first = (rec.record_title || '?')[0].toUpperCase();
+    if (first !== lastLetter) {
+      html += `<a name="letter-${first}"></a><h3 style="margin-top:12px">${first}</h3>`;
+      lastLetter = first;
+    }
+    html += `<span id="title"><a href="index.html#record/${rec.id}">${esc(rec.record_title)}</a></span><br>`;
+  });
+
+  document.getElementById('results').innerHTML = html;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('searchForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) location.href = `index.html#search?q=${encodeURIComponent(q)}&type=all`;
+});
+
+init();
+</script>
+</body>
+</html>

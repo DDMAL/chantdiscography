@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" type="text/css" media="all" href="css/style.css" />
+  <title>Chant Index — Chant Discography</title>
+</head>
+<body>
+
+<div style="width:800px;margin:0 auto;text-align:right;font-size:12pt">
+  <a href="index.html#contact" style="color:#666;text-decoration:none;">Contact Us</a><br />
+  <a href="index.html#links" style="color:#666;text-decoration:none;">Links</a>
+</div>
+
+<div id="header">
+  <div style="position:absolute;margin-top:75px;margin-left:220px;">
+    <form id="searchForm">
+      <input id="searchInput" name="searchtxt" type="text" class="searchfield" maxlength="150" />
+      <input type="submit" value="SEARCH" />
+    </form>
+    <span style="margin-left:115px">
+      <a href="chant-index.html">Chants</a> |
+      <a href="record-index.html">Records</a> |
+      <a href="performer-index.html">Performers</a>
+    </span>
+  </div>
+</div>
+
+<ul class="sitenav clearfix">
+  <li><a href="index.html#home">Home</a></li>
+  <li><a href="index.html#search-help">Searching</a></li>
+  <li><a href="index.html#abbreviations">Abbreviations</a></li>
+  <li><a href="index.html#tropes">Other Articles</a></li>
+  <li><a href="index.html#background">Background</a></li>
+  <li><a href="index.html#print">Print edition</a></li>
+  <li><a href="index.html#liber">Liber Usualis</a></li>
+  <li><a href="index.html#records-needed">Records Needed</a></li>
+</ul>
+
+<div id="results">
+  <div id="loading">Loading chant index…</div>
+</div>
+
+<div id="footer" style="text-align:center">
+  <strong>Support has come from the following sources:</strong>
+  <p>The Central Library Resources Council</p>
+  <p>The Dom Mocquereau Fund</p>
+  <p><img src="img/pmms_logo.jpg" width="50" height="40" style="vertical-align:middle" /><br />
+  The Plainsong and Medieval Music Society</p>
+  <p>The Association for Recorded Sound Collections</p>
+</div>
+<div id="footer" style="text-align:center">
+  <a href="index.html#home">Home</a> |
+  <a href="index.html#search-help">Searching</a> |
+  <a href="index.html#abbreviations">Abbreviations</a> |
+  <a href="index.html#tropes">Tropes</a> |
+  <a href="index.html#background">Background</a> |
+  <a href="index.html#print">Print edition</a> |
+  <a href="index.html#liber">Liber Usualis</a> |
+  <a href="index.html#records-needed">Records Needed</a> |
+  <a href="index.html#contact">Contact Us</a> |
+  <a href="index.html#links">Links</a>
+  <p>&copy;2010</p>
+</div>
+
+<script>
+const PAGE_SIZE = 200;
+let allChants = [];
+let currentPage = 0;
+let currentLetter = '';
+
+async function init() {
+  const r = await fetch('data/chants.json');
+  allChants = await r.json();
+  // Deduplicate by title
+  const seen = new Set();
+  const unique = [];
+  for (const c of allChants) {
+    const t = (c.title_of_chant || '').trim();
+    if (t && !seen.has(t.toLowerCase())) {
+      seen.add(t.toLowerCase());
+      unique.push(c);
+    }
+  }
+  unique.sort((a,b) => (a.title_of_chant||'').localeCompare(b.title_of_chant||''));
+  allChants = unique;
+  renderPage(0, '');
+}
+
+function renderPage(page, letter) {
+  currentPage = page;
+  currentLetter = letter;
+  const el = document.getElementById('results');
+
+  let filtered = letter
+    ? allChants.filter(c => (c.title_of_chant||'').toUpperCase().startsWith(letter))
+    : allChants;
+
+  const total = filtered.length;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const slice = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  // Letter navigation
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  let lnav = '<div class="letter-nav">All: <a href="#" onclick="renderPage(0,\'\');return false;">All</a> | ';
+  lnav += letters.map(l =>
+    `<a href="#" onclick="renderPage(0,'${l}');return false;">${l}</a>`
+  ).join(' ');
+  lnav += '</div>';
+
+  // Pagination
+  let pnav = '';
+  if (totalPages > 1) {
+    pnav = '<div class="pagination">';
+    if (page > 0) pnav += `<a href="#" onclick="renderPage(${page-1},'${letter}');return false;">&laquo; Prev</a> `;
+    for (let i = 0; i < totalPages; i++) {
+      if (i === page) pnav += `<span class="current">${i+1}</span> `;
+      else if (Math.abs(i - page) <= 3 || i === 0 || i === totalPages-1) {
+        pnav += `<a href="#" onclick="renderPage(${i},'${letter}');return false;">${i+1}</a> `;
+      } else if (Math.abs(i - page) === 4) {
+        pnav += '… ';
+      }
+    }
+    if (page < totalPages - 1) pnav += `<a href="#" onclick="renderPage(${page+1},'${letter}');return false;">Next &raquo;</a>`;
+    pnav += '</div>';
+  }
+
+  let html = `<h3>Chants (${total.toLocaleString()} unique titles):</h3>`;
+  html += lnav + pnav;
+  slice.forEach(c => {
+    const t = esc(c.title_of_chant);
+    html += `<span id="title"><a href="index.html#search?q=${encodeURIComponent(c.title_of_chant)}&type=chant">${t}</a></span><br>`;
+  });
+  html += pnav;
+
+  el.innerHTML = html;
+  window.scrollTo(0, 0);
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.getElementById('searchForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const q = document.getElementById('searchInput').value.trim();
+  if (q) location.href = `index.html#search?q=${encodeURIComponent(q)}&type=all`;
+});
+
+init();
+</script>
+</body>
+</html>

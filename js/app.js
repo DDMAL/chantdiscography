@@ -110,8 +110,8 @@ async function renderSearch(q, type, el) {
 
   let html = '';
 
-  // ── Record results ──────────────────────────────────────────────────────
-  if (type === 'all' || type === 'record') {
+  // ── Record results (shown for all, record, and performer searches) ───────
+  if (type !== 'chant') {
     const matchedRecords = (type === 'performer')
       ? records.filter(r => matchesAll([r.performers, r.director, r.solo].join(' '), words))
       : records.filter(r => matchesAll(
@@ -129,26 +129,25 @@ async function renderSearch(q, type, el) {
           <br><span id="date">Date: ${esc(r.date_of_recording)}</span>
           <hr></div>`;
       });
-    } else if (type === 'record') {
+    } else if (type === 'record' || type === 'performer') {
       html += '<h3>Records:</h3><p>No records found.</p>';
     }
   }
 
-  // ── Chant results ───────────────────────────────────────────────────────
-  if (type === 'all' || type === 'chant') {
-    const matchedChants = type === 'chant'
+  // ── Chant results (shown for all and chant searches) ────────────────────
+  if (type !== 'record' && type !== 'performer') {
+    const matchedChants = (type === 'chant')
       ? chants.filter(c => normalise(c.title_of_chant).includes(normalise(q)))
       : chants.filter(c => matchesAll([c.title_of_chant, c.page].join(' '), words));
 
     if (matchedChants.length > 0) {
-      // Attach record info
       const recMap = {};
       records.forEach(r => { recMap[r.id] = r; });
 
       html += `<h3>Chants (${matchedChants.length}):</h3>`;
       matchedChants.slice(0, 500).forEach(c => {
         const rec = recMap[c.record_id] || {};
-        const performers = [c.performers || rec.performers, rec.director, rec.solo]
+        const performers = [rec.performers, rec.director, rec.solo]
           .filter(Boolean).join(', ');
         html += `<div class="result-entry">
           <span id="title">${esc(c.title_of_chant)}</span>

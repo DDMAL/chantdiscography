@@ -35,7 +35,7 @@ for src_name, dst_name in FILES.items():
         print(f"SKIP (not found): {src_path}")
         continue
 
-    with open(src_path, "r", encoding="utf-8", errors="replace") as f:
+    with open(src_path, "r", encoding="cp1252", errors="replace") as f:
         content = f.read()
 
     # Unescape backslash-quoted double-quotes

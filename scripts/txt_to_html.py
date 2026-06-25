@@ -27,6 +27,54 @@ FILES = {
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
+def fix_mojibake(m):
+    s = m.group(0)
+    for codec in ("cp1252", "latin-1"):
+        try:
+            return s.encode(codec).decode("utf-8")
+        except Exception:
+            continue
+    return s
+
+def clean(content):
+    # Unescape backslash-escaped quotes (both single and double)
+    content = content.replace('\\"', '"')
+    content = content.replace("\\'", "'")
+
+    # Strip leading/trailing whitespace
+    content = content.strip()
+
+    # Fix mojibake (cp1252/latin-1 bytes mis-read as UTF-8)
+    content = re.sub(r'[^\x00-\x7F]+', fix_mojibake, content)
+
+    # Remove <font> tags entirely (keep their inner content)
+    content = re.sub(r'<font[^>]*>', '', content)
+    content = re.sub(r'</font>', '', content)
+
+    # Remove inline font-family style declarations (leave other styles intact)
+    content = re.sub(r'\s*font-family\s*:[^;"\']+(;|(?=["\']))', '', content)
+
+    # Remove leftover empty style="" attributes
+    content = re.sub(r'\s*style\s*=\s*["\']["\']', '', content)
+
+    # Remove font-size: medium inline styles (redundant — CSS handles it)
+    content = re.sub(r'\s*font-size\s*:\s*medium\s*;?', '', content)
+
+    # Auto-link bare URLs that are not already inside an <a href>
+    # Match http(s):// URLs not preceded by href=" or src="
+    def linkify(m):
+        url = m.group(0).rstrip('.,;)')
+        trail = m.group(0)[len(url):]
+        return f'<a href="{url}" target="_blank" rel="noopener">{url}</a>{trail}'
+
+    content = re.sub(
+        r'(?<!["\'=>])(https?://[^\s<"\']+)',
+        linkify,
+        content
+    )
+
+    return content
+
 for src_name, dst_name in FILES.items():
     src_path = os.path.join(TXT_DIR, src_name)
     dst_path = os.path.join(OUT_DIR, dst_name)
@@ -38,22 +86,7 @@ for src_name, dst_name in FILES.items():
     with open(src_path, "r", encoding="cp1252", errors="replace") as f:
         content = f.read()
 
-    # Unescape backslash-quoted double-quotes
-    content = content.replace('\\"', '"')
-
-    # Strip leading/trailing whitespace
-    content = content.strip()
-
-    # Fix mojibake (cp1252 → UTF-8 round-trip) where it sneaked through
-    def fix_str(m):
-        s = m.group(0)
-        try:
-            return s.encode("cp1252").decode("utf-8")
-        except Exception:
-            return s
-
-    # Apply fix to runs of non-ASCII characters
-    content = re.sub(r'[^\x00-\x7F]+', fix_str, content)
+    content = clean(content)
 
     with open(dst_path, "w", encoding="utf-8") as f:
         f.write(content)

@@ -82,8 +82,13 @@ ul.sitenav li a:hover {
   margin-top: 20px;
 }
 
-#results p, #results div, #results span {
+#results {
   font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+  font-size: 14px;
+}
+
+/* Search result detail fields stay compact */
+#results span#details, span#date {
   font-size: 12px;
 }
 

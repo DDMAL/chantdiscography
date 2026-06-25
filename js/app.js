@@ -216,8 +216,37 @@ async function renderRecord(id, el) {
 function renderContact(el) {
   el.innerHTML = `
     <strong>Contact Us:</strong>
-    <p>For questions or contributions regarding the Chant Discography, please send an email:</p>
-    <p><a href="mailto:chantdisc@gmail.com" id="title">chantdisc@gmail.com</a></p>`;
+    <form class="contactform" id="contactForm" style="margin-top:12px">
+      <table border="0" cellspacing="2" cellpadding="2" width="700">
+        <tr><td colspan="2">COMPLETE INFORMATION BELOW - *Required</td></tr>
+        <tr>
+          <td width="130" align="right"><label>Name*</label></td>
+          <td><input type="text" id="cName" size="30" required /></td>
+        </tr>
+        <tr>
+          <td width="130" align="right"><label>Email*</label></td>
+          <td><input type="email" id="cEmail" size="30" required /></td>
+        </tr>
+        <tr>
+          <td width="130" valign="top" align="right"><label>Message*</label></td>
+          <td><textarea id="cMsg" rows="5" cols="40" required></textarea></td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding-left:130px">
+            <input type="submit" value="Submit" />
+          </td>
+        </tr>
+      </table>
+    </form>`;
+
+  document.getElementById('contactForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name = document.getElementById('cName').value.trim();
+    const email = document.getElementById('cEmail').value.trim();
+    const msg  = document.getElementById('cMsg').value.trim();
+    const body = encodeURIComponent(`Name: ${name}\n\n${msg}`);
+    window.location.href = `mailto:chantdiscography@gmail.com?subject=Chant%20Discography%20Contact&body=${body}`;
+  });
 }
 
 // ── Search form ───────────────────────────────────────────────────────────────

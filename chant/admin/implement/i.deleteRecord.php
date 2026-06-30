@@ -1,1 +1,0 @@
-<?php$id = $_POST['id'];include("../connections/conn.php");mysql_select_db($database_ndb, $ndb);$query2 = "Delete from chant where record_id=".$id;$query = "Delete from record where id=".$id;$rs = mysql_query($query2, $ndb) or die(mysql_error());$rs = mysql_query($query, $ndb) or die(mysql_error());?>

@@ -1,1 +1,0 @@
-<?php# FileName=”Connection_php_mysql.htm”# Type=”MYSQL”# HTTP=”true”$hostname_ndb = "localhost";$database_ndb = "chant_disc";$username_ndb = "chant";$password_ndb = "imac8664";$ndb = mysql_connect($hostname_ndb, $username_ndb, $password_ndb) or trigger_error(mysql_error(),E_USER_ERROR);?>

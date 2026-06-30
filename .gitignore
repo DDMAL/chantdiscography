@@ -1,0 +1,13 @@
+# SQL database dumps — not needed for hosting (data is in data/*.json)
+*.sql
+*.sql.zip
+
+# Legacy PHP source files
+chant/
+chant.zip
+
+# Site videos
+sitevideos
+
+# macOS
+.DS_Store

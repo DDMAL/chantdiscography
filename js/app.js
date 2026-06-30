@@ -95,6 +95,17 @@ function matchesAll(target, words) {
   return words.every(w => t.includes(w));
 }
 
+// Count total word occurrences in text — used to replicate MySQL FULLTEXT score ordering.
+function scoreText(text, words) {
+  const t = normalise(text);
+  let count = 0;
+  for (const w of words) {
+    let pos = 0;
+    while ((pos = t.indexOf(w, pos)) !== -1) { count++; pos += w.length; }
+  }
+  return count;
+}
+
 async function renderSearch(q, type, el) {
   if (!q) {
     el.innerHTML = '<p>Enter a search term above.</p>';
@@ -112,11 +123,21 @@ async function renderSearch(q, type, el) {
 
   // ── Record results (shown for all, record, and performer searches) ───────
   if (type !== 'chant') {
-    const matchedRecords = (type === 'performer')
-      ? records.filter(r => matchesAll([r.performers, r.director, r.solo].join(' '), words))
-      : records.filter(r => matchesAll(
-          [r.record_title, r.issue_number, r.performers, r.director, r.solo, r.keywords].join(' '),
-          words));
+    let matchedRecords;
+    if (type === 'performer') {
+      // Original PHP: simple LIKE match on performers field only, no ranking
+      matchedRecords = records.filter(r =>
+        normalise([r.performers, r.director, r.solo].join(' ')).includes(normalise(q))
+      );
+    } else {
+      // Original PHP: FULLTEXT boolean mode, sorted by score DESC then serial_num
+      const fields = r => [r.record_title, r.issue_number, r.performers, r.director, r.solo, r.keywords].join(' ');
+      matchedRecords = records
+        .filter(r => matchesAll(fields(r), words))
+        .map(r => ({ r, score: scoreText(fields(r), words) }))
+        .sort((a, b) => b.score - a.score || (a.r.serial_num || 0) - (b.r.serial_num || 0))
+        .map(x => x.r);
+    }
 
     if (matchedRecords.length > 0) {
       html += `<h3>Records (${matchedRecords.length}):</h3>`;
@@ -136,14 +157,24 @@ async function renderSearch(q, type, el) {
 
   // ── Chant results (shown for all and chant searches) ────────────────────
   if (type !== 'record' && type !== 'performer') {
-    const matchedChants = (type === 'chant')
-      ? chants.filter(c => normalise(c.title_of_chant).includes(normalise(q)))
-      : chants.filter(c => matchesAll([c.title_of_chant, c.page].join(' '), words));
+    const recMap = {};
+    records.forEach(r => { recMap[r.id] = r; });
+
+    let matchedChants;
+    if (type === 'chant') {
+      // Original PHP: simple LIKE match on title_of_chant only, no ranking
+      matchedChants = chants.filter(c => normalise(c.title_of_chant).includes(normalise(q)));
+    } else {
+      // Original PHP: FULLTEXT on title_of_chant + page, sorted by score DESC then serial_num
+      const fields = c => [c.title_of_chant, c.page].join(' ');
+      matchedChants = chants
+        .filter(c => matchesAll(fields(c), words))
+        .map(c => ({ c, score: scoreText(fields(c), words), serial_num: (recMap[c.record_id] || {}).serial_num || 0 }))
+        .sort((a, b) => b.score - a.score || a.serial_num - b.serial_num)
+        .map(x => x.c);
+    }
 
     if (matchedChants.length > 0) {
-      const recMap = {};
-      records.forEach(r => { recMap[r.id] = r; });
-
       html += `<h3>Chants (${matchedChants.length}):</h3>`;
       matchedChants.slice(0, 500).forEach(c => {
         const rec = recMap[c.record_id] || {};

@@ -95,15 +95,26 @@ function matchesAll(target, words) {
   return words.every(w => t.includes(w));
 }
 
-// Count total word occurrences in text — used to replicate MySQL FULLTEXT score ordering.
+function matchesAny(target, words) {
+  const t = normalise(target);
+  return words.some(w => t.includes(w));
+}
+
+// Split normalised text into whole-word tokens (mirrors MySQL FULLTEXT tokenisation).
+function tokenize(text) {
+  return normalise(text).split(/[^a-z0-9]+/).filter(Boolean);
+}
+
+// OR whole-word match — any query word must appear as a standalone token.
+function matchesAnyWord(target, words) {
+  const tokens = new Set(tokenize(target));
+  return words.some(w => tokens.has(w));
+}
+
+// Count matched whole-word tokens — used for FULLTEXT score ordering.
 function scoreText(text, words) {
-  const t = normalise(text);
-  let count = 0;
-  for (const w of words) {
-    let pos = 0;
-    while ((pos = t.indexOf(w, pos)) !== -1) { count++; pos += w.length; }
-  }
-  return count;
+  const tokens = tokenize(text);
+  return tokens.reduce((n, t) => n + (words.includes(t) ? 1 : 0), 0);
 }
 
 async function renderSearch(q, type, el) {
@@ -115,6 +126,8 @@ async function renderSearch(q, type, el) {
   el.innerHTML = '<div id="loading">Searching…</div>';
 
   const words = normalise(q).split(/\s+/).filter(Boolean);
+  // MySQL FULLTEXT: words shorter than ft_min_word_len are ignored. The original server used 3.
+  const ftWords = words.filter(w => w.length >= 3);
 
   await loadRecords();
   await loadChants();
@@ -132,9 +145,9 @@ async function renderSearch(q, type, el) {
     } else {
       // Original PHP: FULLTEXT boolean mode, sorted by score DESC then serial_num
       const fields = r => [r.record_title, r.issue_number, r.performers, r.director, r.solo, r.keywords].join(' ');
-      matchedRecords = records
-        .filter(r => matchesAll(fields(r), words))
-        .map(r => ({ r, score: scoreText(fields(r), words) }))
+      matchedRecords = ftWords.length === 0 ? [] : records
+        .filter(r => matchesAnyWord(fields(r), ftWords))
+        .map(r => ({ r, score: scoreText(fields(r), ftWords) }))
         .sort((a, b) => b.score - a.score || (a.r.serial_num || 0) - (b.r.serial_num || 0))
         .map(x => x.r);
     }
@@ -167,10 +180,10 @@ async function renderSearch(q, type, el) {
     } else {
       // Original PHP: FULLTEXT on title_of_chant + page, sorted by score DESC then serial_num
       const fields = c => [c.title_of_chant, c.page].join(' ');
-      matchedChants = chants
-        .filter(c => matchesAll(fields(c), words))
-        .map(c => ({ c, score: scoreText(fields(c), words), serial_num: (recMap[c.record_id] || {}).serial_num || 0 }))
-        .sort((a, b) => b.score - a.score || a.serial_num - b.serial_num)
+      matchedChants = ftWords.length === 0 ? [] : chants
+        .filter(c => matchesAnyWord(fields(c), ftWords))
+        .map(c => ({ c, score: scoreText(fields(c), ftWords), serial_num: (recMap[c.record_id] || {}).serial_num || 0 }))
+        .sort((a, b) => b.score - a.score || a.serial_num - b.serial_num || (a.c.item_num || 0) - (b.c.item_num || 0))
         .map(x => x.c);
     }
 

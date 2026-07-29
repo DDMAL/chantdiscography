@@ -194,3 +194,55 @@ form.contactform input[type=submit]:hover {
   display: table;
   clear: both;
 }
+
+/* Restoration credit — separated from the original site content by a rule above it */
+#restoration-credit {
+  background: #fff;
+  color: #333;
+  width: 800px;
+  margin: 0 auto;
+  padding: 20px 10px 25px;
+  border-top: 2px solid #ccc;
+  text-align: center;
+  font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+}
+
+#restoration-credit p.credit-line {
+  font-size: 13px;
+  color: #333;
+  margin: 0 0 15px;
+}
+
+#restoration-credit p.credit-line strong {
+  color: #000;
+}
+
+#restoration-credit a {
+  color: #990033;
+}
+
+#restoration-credit .logos-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  margin-bottom: 18px;
+}
+
+#restoration-credit .logos-row img {
+  max-height: 140px;
+  max-width: 340px;
+}
+
+#restoration-credit .logos-row img.logo-large {
+  max-width: none;
+  width: 100%;
+  margin: 0 0px;
+  height: auto;
+}
+
+#restoration-credit .report-issue {
+  font-size: 11px;
+  color: #777;
+}

@@ -289,7 +289,7 @@ function renderContact(el) {
     const email = document.getElementById('cEmail').value.trim();
     const msg  = document.getElementById('cMsg').value.trim();
     const body = encodeURIComponent(`Name: ${name}\n\n${msg}`);
-    window.location.href = `mailto:chantdiscography@gmail.com?subject=Chant%20Discography%20Contact&body=${body}`;
+    window.location.href = `mailto:cantusdatabase@gmail.com?subject=Chant%20Discography%20Contact&body=${body}`;
   });
 }
 

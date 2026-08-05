@@ -129,6 +129,28 @@ function scoreText(text, words) {
   return tokens.reduce((n, t) => n + (words.includes(t) ? 1 : 0), 0);
 }
 
+// A query wrapped in "double quotes" is an exact-phrase search (per search-help.html).
+// Strips the quotes either way, so quoting a single word is harmless.
+function parseQuery(q) {
+  const trimmed = q.trim();
+  const m = trimmed.match(/^"(.+)"$/);
+  return m ? { phrase: m[1].trim(), isPhrase: true } : { phrase: trimmed, isPhrase: false };
+}
+
+function matchesPhrase(target, phrase) {
+  return normalise(target).includes(normalise(phrase));
+}
+
+// Count phrase occurrences — used for FULLTEXT-style score ordering.
+function scorePhrase(text, phrase) {
+  const t = normalise(text);
+  const p = normalise(phrase);
+  if (!p) return 0;
+  let count = 0, pos = 0;
+  while ((pos = t.indexOf(p, pos)) !== -1) { count++; pos += p.length; }
+  return count;
+}
+
 async function renderSearch(q, type, el) {
   if (!q) {
     el.innerHTML = '<p>Enter a search term above.</p>';
@@ -137,9 +159,15 @@ async function renderSearch(q, type, el) {
 
   el.innerHTML = '<div id="loading">Searching…</div>';
 
-  const words = normalise(q).split(/\s+/).filter(Boolean);
-  // MySQL FULLTEXT: words shorter than ft_min_word_len are ignored. The original server used 3.
-  const ftWords = words.filter(w => w.length >= 3);
+  // Per search-help.html: text wrapped in "double quotes" is an exact-phrase search.
+  const { phrase, isPhrase } = parseQuery(q);
+  const words = normalise(phrase).split(/\s+/).filter(Boolean);
+  // Chant sigla like "GT", "LU", "WG" are 2 letters — don't filter those out.
+  const ftWords = words.filter(w => w.length >= 2);
+
+  const matchFts   = (target) => isPhrase ? matchesPhrase(target, phrase) : matchesAnyWord(target, ftWords);
+  const scoreFts    = (target) => isPhrase ? scorePhrase(target, phrase) : scoreText(target, ftWords);
+  const hasFtsQuery = isPhrase ? phrase.length > 0 : ftWords.length > 0;
 
   await loadRecords();
   await loadChants();
@@ -152,14 +180,14 @@ async function renderSearch(q, type, el) {
     if (type === 'performer') {
       // Original PHP: simple LIKE match on performers field only, no ranking
       matchedRecords = records.filter(r =>
-        normalise([r.performers, r.director, r.solo].join(' ')).includes(normalise(q))
+        normalise([r.performers, r.director, r.solo].join(' ')).includes(normalise(phrase))
       );
     } else {
       // Original PHP: FULLTEXT boolean mode, sorted by score DESC then serial_num
       const fields = r => [r.record_title, r.issue_number, r.performers, r.director, r.solo, r.keywords].join(' ');
-      matchedRecords = ftWords.length === 0 ? [] : records
-        .filter(r => matchesAnyWord(fields(r), ftWords))
-        .map(r => ({ r, score: scoreText(fields(r), ftWords) }))
+      matchedRecords = !hasFtsQuery ? [] : records
+        .filter(r => matchFts(fields(r)))
+        .map(r => ({ r, score: scoreFts(fields(r)) }))
         .sort((a, b) => b.score - a.score || (a.r.serial_num || 0) - (b.r.serial_num || 0))
         .map(x => x.r);
     }
@@ -188,13 +216,13 @@ async function renderSearch(q, type, el) {
     let matchedChants;
     if (type === 'chant') {
       // Original PHP: simple LIKE match on title_of_chant only, no ranking
-      matchedChants = chants.filter(c => normalise(c.title_of_chant).includes(normalise(q)));
+      matchedChants = chants.filter(c => normalise(c.title_of_chant).includes(normalise(phrase)));
     } else {
       // Original PHP: FULLTEXT on title_of_chant + page, sorted by score DESC then serial_num
       const fields = c => [c.title_of_chant, c.page].join(' ');
-      matchedChants = ftWords.length === 0 ? [] : chants
-        .filter(c => matchesAnyWord(fields(c), ftWords))
-        .map(c => ({ c, score: scoreText(fields(c), ftWords), serial_num: (recMap[c.record_id] || {}).serial_num || 0 }))
+      matchedChants = !hasFtsQuery ? [] : chants
+        .filter(c => matchFts(fields(c)))
+        .map(c => ({ c, score: scoreFts(fields(c)), serial_num: (recMap[c.record_id] || {}).serial_num || 0 }))
         .sort((a, b) => b.score - a.score || a.serial_num - b.serial_num || (a.c.item_num || 0) - (b.c.item_num || 0))
         .map(x => x.c);
     }

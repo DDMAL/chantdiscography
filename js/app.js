@@ -31,6 +31,13 @@ function getRoute() {
   return { path, params };
 }
 
+// Defer the scroll reset until after the browser has laid out the newly
+// rendered (often much shorter) content — otherwise the old scroll offset
+// can get clamped to the new page's bottom instead of reset to the top.
+function scrollToTopAfterRender() {
+  requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, 0)));
+}
+
 async function route() {
   const { path, params } = getRoute();
   const el = document.getElementById('results');
@@ -38,6 +45,7 @@ async function route() {
   // Static content pages
   if (CONTENT_PAGES.includes(path)) {
     await renderContentPage(path, el);
+    scrollToTopAfterRender();
     return;
   }
 
@@ -47,6 +55,7 @@ async function route() {
     const type = params.get('type') || 'all';
     document.getElementById('searchInput').value = q;
     await renderSearch(q, type, el);
+    scrollToTopAfterRender();
     return;
   }
 
@@ -54,17 +63,20 @@ async function route() {
   if (path.startsWith('record/')) {
     const id = parseInt(path.split('/')[1], 10);
     await renderRecord(id, el);
+    scrollToTopAfterRender();
     return;
   }
 
   // Contact
   if (path === 'contact') {
     renderContact(el);
+    scrollToTopAfterRender();
     return;
   }
 
   // Default → home
   await renderContentPage('home', el);
+  scrollToTopAfterRender();
 }
 
 // ── Static content pages ─────────────────────────────────────────────────────
